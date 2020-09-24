@@ -13,7 +13,7 @@ import (
 
 type Migration struct {
 	Id        uint   `gorm:"primaryKey"`
-	Migration string `gorm:"size:999;not null;uniqueIndex"`
+	Migration string `gorm:"size:999;not null;uniqueIndex:mmu"`
 	Batch     uint   `gorm:"not null"`
 }
 
