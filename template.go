@@ -1,4 +1,4 @@
-package gorm_migrate
+package migrate
 
 var fileContent = `package {{ .Package }}
 
@@ -13,12 +13,18 @@ func init()  {
 	Migrations = append(Migrations, &m)
 }
 
-func (m *{{ .StructName }}) Up() {
-	
+func (m *{{ .StructName }}) Up() error {
+
+	return nil
 }
 
-func (m *{{ .StructName }}) Down()  {
+func (m *{{ .StructName }}) Down() error  {
 
+	return nil
 }
+`
 
+var migrationContent = `package {{ .Package }}
+
+var Migrations = make([]interface{}, 0)
 `
