@@ -92,7 +92,7 @@ func Up(db *gorm.DB, migrations []interface{}) error {
 			Migration: name,
 			Batch:     batch,
 		})
-		color.Green.Println("migrate " + name + "success")
+		color.Green.Println("migrated " + name + " success")
 	}
 	return nil
 }
@@ -109,18 +109,18 @@ func Down(db *gorm.DB, migrations []interface{}) error {
 	}
 
 	ms := make([]*Migration, 0)
-	db.Where(&Migration{Batch: m.Batch}).Find(&ms)
+	db.Where(&Migration{Batch: m.Batch}).Order("id desc").Find(&ms)
 	type RollBack struct {
 		MigrationTable *Migration
 		Migration      interface{}
 	}
 	should := make([]RollBack, 0)
-	for _, v := range migrations {
-		for _, vv := range ms {
-			if gconv.String(reflect.ValueOf(v).Elem().FieldByName("Name")) == vv.Migration {
+	for _, v := range ms {
+		for _, vv := range migrations {
+			if gconv.String(reflect.ValueOf(vv).Elem().FieldByName("Name")) == v.Migration {
 				should = append(should, RollBack{
-					MigrationTable: vv,
-					Migration:      v,
+					MigrationTable: v,
+					Migration:      vv,
 				})
 				break
 			}
@@ -149,7 +149,7 @@ func Down(db *gorm.DB, migrations []interface{}) error {
 		db.Delete(&Migration{
 			Id: v.MigrationTable.Id,
 		})
-		color.Green.Println("rollback " + name + "success")
+		color.Green.Println("rollback " + name + " success")
 	}
 
 	return nil
