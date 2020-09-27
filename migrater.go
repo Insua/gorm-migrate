@@ -103,7 +103,7 @@ func Down(db *gorm.DB, migrations []interface{}) error {
 	}
 
 	m := Migration{}
-	db.Order("batch asc").Last(&m)
+	db.Order("batch desc").Last(&m)
 	if m.Batch == 0 {
 		return errors.New("nothing to rollback")
 	}
