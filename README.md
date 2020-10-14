@@ -94,7 +94,7 @@ func Down() {
 ```
 
 ####  command
-now you can use ```go run cmd.go migrate new file new``` to create a migrate file, and ```go run cmd.go migrate up``` to migrate ```go rum cmd.go migrate down ``` to rollback  
+now you can use ```go run cmd.go migrate new file_name``` to create a migrate file, and ```go run cmd.go migrate up``` to migrate ```go rum cmd.go migrate down ``` to rollback  
 
 for project example, a [go frame](https://github.com/gogf/gf) cms called [gf-cms](https://github.com/Insua/gf-cms) which will specify the detail.
 
