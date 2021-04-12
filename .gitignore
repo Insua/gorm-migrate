@@ -3,3 +3,4 @@ config.toml
 database
 db.go
 go.sum
+zzz

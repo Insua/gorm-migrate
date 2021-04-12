@@ -12,9 +12,9 @@ import (
 )
 
 type Migration struct {
-	Id        uint   `gorm:"primaryKey"`
-	Migration string `gorm:"size:255;not null;uniqueIndex"`
-	Batch     uint   `gorm:"not null"`
+	Id        uint   `gorm:"primaryKey;column:ID"`
+	Migration string `gorm:"size:255;not null;uniqueIndex;column:MIGRATION"`
+	Batch     uint   `gorm:"not null;column:BATCH"`
 }
 
 func initMigration(db *gorm.DB) error {
@@ -28,7 +28,7 @@ func initMigration(db *gorm.DB) error {
 
 func hasMigrated(db *gorm.DB) []string {
 	ms := make([]*Migration, 0)
-	db.Select("migration").Find(&ms)
+	db.Select("MIGRATION").Find(&ms)
 	mString := make([]string, 0)
 	for _, v := range ms {
 		mString = append(mString, v.Migration)
