@@ -17,6 +17,10 @@ type Migration struct {
 	Batch     uint   `gorm:"not null;column:BATCH"`
 }
 
+func (Migration) TableName() string {
+	return "MIGRATIONS"
+}
+
 func initMigration(db *gorm.DB) error {
 
 	if !db.Migrator().HasTable(&Migration{}) {
