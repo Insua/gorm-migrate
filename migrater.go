@@ -21,18 +21,17 @@ func (Migration) TableName() string {
 	return "MIGRATIONS"
 }
 
-func initMigration(db *gorm.DB) error {
-
-	if !db.Migrator().HasTable(&Migration{}) {
-		return db.Migrator().CreateTable(&Migration{})
+func initMigration(db *gorm.DB, tableName string) error {
+	if !db.Migrator().HasTable(tableName) {
+		return db.Table(tableName).Migrator().CreateTable(&Migration{})
 	}
 
 	return nil
 }
 
-func hasMigrated(db *gorm.DB) []string {
+func hasMigrated(db *gorm.DB, tableName string) []string {
 	ms := make([]*Migration, 0)
-	db.Select("MIGRATION").Find(&ms)
+	db.Table(tableName).Select("MIGRATION").Find(&ms)
 	mString := make([]string, 0)
 	for _, v := range ms {
 		mString = append(mString, v.Migration)
@@ -58,24 +57,28 @@ func shouldMigrate(hasMigrated []string, migrations []interface{}) []interface{}
 	return should
 }
 
-func getBatch(db *gorm.DB) uint {
+func getBatch(db *gorm.DB, tableName string) uint {
 	m := Migration{}
-	db.Order("batch desc").First(&m)
+	db.Table(tableName).Order("BATCH DESC").First(&m)
 	return m.Batch + 1
 }
 
-func Up(db *gorm.DB, migrations []interface{}) error {
-	if err := initMigration(db); err != nil {
+func Up(db *gorm.DB, migrations []interface{}, migrateTableName ...string) error {
+	tableName := new(Migration).TableName()
+	if len(migrateTableName) > 0 {
+		tableName = migrateTableName[0]
+	}
+	if err := initMigration(db, tableName); err != nil {
 		return err
 	}
 
-	sm := shouldMigrate(hasMigrated(db), migrations)
+	sm := shouldMigrate(hasMigrated(db, tableName), migrations)
 
 	if len(sm) == 0 {
 		return errors.New("nothing to migrate")
 	}
 
-	batch := getBatch(db)
+	batch := getBatch(db, tableName)
 	for _, v := range sm {
 		name := gconv.String(reflect.ValueOf(v).Elem().FieldByName("Name"))
 		color.Green.Println("migrating " + name)
@@ -92,7 +95,7 @@ func Up(db *gorm.DB, migrations []interface{}) error {
 			color.Red.Println("please check migration " + name)
 			return errors.New("migration error")
 		}
-		db.Create(&Migration{
+		db.Table(tableName).Create(&Migration{
 			Migration: name,
 			Batch:     batch,
 		})
@@ -101,19 +104,23 @@ func Up(db *gorm.DB, migrations []interface{}) error {
 	return nil
 }
 
-func Down(db *gorm.DB, migrations []interface{}) error {
-	if err := initMigration(db); err != nil {
+func Down(db *gorm.DB, migrations []interface{}, migrateTableName ...string) error {
+	tableName := new(Migration).TableName()
+	if len(migrateTableName) > 0 {
+		tableName = migrateTableName[0]
+	}
+	if err := initMigration(db, tableName); err != nil {
 		return err
 	}
 
 	m := Migration{}
-	db.Order("batch desc").Last(&m)
+	db.Table(tableName).Order("batch desc").Last(&m)
 	if m.Batch == 0 {
 		return errors.New("nothing to rollback")
 	}
 
 	ms := make([]*Migration, 0)
-	db.Where(&Migration{Batch: m.Batch}).Order("id desc").Find(&ms)
+	db.Table(tableName).Where(&Migration{Batch: m.Batch}).Order("id desc").Find(&ms)
 	type RollBack struct {
 		MigrationTable *Migration
 		Migration      interface{}
@@ -150,7 +157,7 @@ func Down(db *gorm.DB, migrations []interface{}) error {
 			color.Red.Println("please check migration " + name)
 			return errors.New("rollback error")
 		}
-		db.Delete(&Migration{
+		db.Table(tableName).Delete(&Migration{
 			Id: v.MigrationTable.Id,
 		})
 		color.Green.Println("rollback " + name + " success")
